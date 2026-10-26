@@ -1,0 +1,50 @@
+server:
+  port: 8080
+  servlet:
+    session:
+      timeout: 30m
+      cookie:
+        name: JSESSIONID
+        http-only: true
+        secure: false # Set to true in production HTTPS
+        same-site: lax
+
+spring:
+  application:
+    name: life-root-ai
+  datasource:
+    url: jdbc:mysql://localhost:3306/liferoot_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Kolkata
+    username: root
+    password: Kolkatann@2025
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate # Schema changes strictly through Flyway migrations
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        jdbc:
+          time_zone: Asia/Kolkata
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+  session:
+    store-type: jdbc
+    jdbc:
+      initialize-schema: always
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${SMTP_USER:noreply@liferoot.ai}
+    password: ${SMTP_PASS:changeme}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+
+app:
+  cors:
+    allowed-origin: http://localhost:5173
+  maps:
+    api-key: ${GOOGLE_MAPS_API_KEY:YOUR_SERVER_SIDE_GOOGLE_MAPS_KEY}

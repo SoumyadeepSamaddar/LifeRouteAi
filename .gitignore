@@ -1,0 +1,27 @@
+# Compiled class files & build artifacts
+target/
+*.class
+
+# Eclipse / STS metadata
+.metadata/
+.classpath
+.project
+.settings/
+bin/
+tmp/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+
+# VS Code
+.vscode/
+
+# Environment files
+.env
+*.log
+
+# Windows desktop artifacts
+Thumbs.db
+desktop.ini
