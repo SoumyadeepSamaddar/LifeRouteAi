@@ -1,0 +1,5 @@
+package com.liferoute.backend.entity;
+
+public class SecurityCode {
+
+}

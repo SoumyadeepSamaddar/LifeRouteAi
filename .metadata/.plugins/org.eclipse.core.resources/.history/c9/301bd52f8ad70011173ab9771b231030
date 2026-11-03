@@ -1,0 +1,37 @@
+package com.liferoute.backend.config;
+
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Component;
+
+import com.liferoute.backend.entity.User;
+import com.liferoute.backend.repository.UserRepository;
+import com.liferoute.domain.enums.Role;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+p@Slf4j
+@Component
+@RequiredArgsConstructor
+public class DataInitializer implements CommandLineRunner {
+
+	private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    
+    @Override
+    public void run(String... args) {
+        if (userRepository.countByRoleAndActiveTrue(Role.ADMIN) == 0) {
+            User defaultAdmin = User.builder()
+                    .name("Life Route Primary Admin")
+                    .email("admin@liferoute.ai")
+                    .phone("+919800000000")
+                    .passwordHash(passwordEncoder.encode("Admin1234"))
+                    .role(Role.ADMIN)
+                    .active(true)
+                    .build();
+            userRepository.save(defaultAdmin);
+            log.info("Default ADMIN seeded: admin@liferoute.ai / Admin1234");
+        }
+    }
+}

@@ -1,0 +1,121 @@
+package com.liferoute.backend.service.impl;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.LockedException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.stereotype.Service;
+
+import com.liferoute.backend.dto.request.LoginRequestDTO;
+import com.liferoute.backend.dto.response.UserProfileResponseDTO;
+import com.liferoute.backend.entity.User;
+import com.liferoute.backend.repository.UserRepository;
+import com.liferoute.backend.security.CustomUserDetails;
+import com.liferoute.backend.service.AuditService;
+import com.liferoute.backend.service.AuthService;
+import com.liferoute.domain.enums.AuditActionType;
+
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class AuthServiceImpl implements AuthService {
+	private final UserRepository userRepository;
+    private final UserDetailsService userDetailsService;
+    private final PasswordEncoder passwordEncoder;
+    private final AuditService auditService;
+    
+    @Override
+    @Transactional(noRollbackFor = {BadCredentialsException.class, LockedException.class})
+    public UserProfileResponseDTO login(LoginRequestDTO loginRequest, HttpServletRequest request) {
+    	User user = userRepository.findByEmailIgnoreCase(loginRequest.getEmail())
+                .orElseThrow(() -> new BadCredentialsException("Invalid email or password."));
+    	
+    	if (user.getLockedUntil() != null && user.getLockedUntil().isAfter(Instant.now())) {
+            throw new LockedException("Too many attempts. Try again in 15 minutes.");
+        }
+    	if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPasswordHash())) {
+            int attempts = user.getFailedLoginAttempts() + 1;
+            user.setFailedLoginAttempts(attempts);
+            if (attempts >= 5) {
+                user.setLockedUntil(Instant.now().plus(15, ChronoUnit.MINUTES));
+            }
+            userRepository.save(user);
+            auditService.log(null, AuditActionType.LOGIN_FAILED, "User:" + loginRequest.getEmail(),
+                    "Failed login attempt #" + attempts, request.getRemoteAddr());
+            if (attempts >= 5) {
+                throw new LockedException("Too many attempts. Try again in 15 minutes.");
+            }
+            throw new BadCredentialsException("Invalid email or password.");
+    }
+    	user.setFailedLoginAttempts(0);
+        user.setLockedUntil(null);
+        user.setLastLoginAt(Instant.now());
+        userRepository.save(user);
+
+        UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
+        UsernamePasswordAuthenticationToken authToken =
+                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(authToken);
+        SecurityContextHolder.setContext(context);
+
+        HttpSession session = request.getSession(true);
+        session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
+
+        CustomUserDetails customUser = (CustomUserDetails) userDetails;
+        auditService.log(customUser, AuditActionType.LOGIN, "User:" + user.getId(),
+                "Session login successful", request.getRemoteAddr());
+
+        return getCurrentUserProfile(customUser);
+    
+}
+    
+    @Override
+    public UserProfileResponseDTO getCurrentUserProfile(CustomUserDetails currentUser) {
+        return UserProfileResponseDTO.builder()
+                .id(currentUser.getId())
+                .name(currentUser.getName())
+                .email(currentUser.getEmail())
+                .role(currentUser.getRole())
+                .staffRole(currentUser.getStaffRole())
+                .hospitalId(currentUser.getHospitalId())
+                .build();
+    }
+    
+    @Override
+    public void logout(CustomUserDetails currentUser, HttpServletRequest request, HttpServletResponse response) {
+        if (currentUser != null) {
+            auditService.log(currentUser, AuditActionType.LOGOUT, "User:" + currentUser.getId(),
+                    "User logged out", request.getRemoteAddr());
+        }
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
+        SecurityContextHolder.clearContext();
+
+        Cookie cookie = new Cookie("JSESSIONID", null);
+        cookie.setPath("/");
+        cookie.setHttpOnly(true);
+        cookie.setMaxAge(0);
+        response.addCookie(cookie);
+    }
+    
+}
+    
+    

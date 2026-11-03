@@ -1,0 +1,15 @@
+package com.liferoute.backend.service;
+
+import java.util.List;
+
+import com.liferoute.backend.entity.AuditLog;
+import com.liferoute.backend.security.CustomUserDetails;
+import com.liferoute.domain.enums.AuditActionType;
+
+
+public interface AuditService {
+	void log(CustomUserDetails user, AuditActionType actionType, String targetObject, String details, String ipAddress);
+    List<AuditLog> getLatestAuditLogs();
+    List<AuditLog> getHospitalAuditLogs(Long hospitalId);
+}
+	
