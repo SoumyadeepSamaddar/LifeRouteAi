@@ -1,0 +1,57 @@
+package com.liferoute.backend.controller;
+
+import com.liferoute.backend.dto.request.LoginRequestDTO;
+import com.liferoute.backend.dto.response.UserProfileResponseDTO;
+import com.liferoute.backend.security.CustomUserDetails;
+import com.liferoute.backend.service.AuthService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+
+
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/auth")
+@RequiredArgsConstructor
+public class AuthController {
+	private final AuthService authService;
+	
+	@PostMapping("/login")
+    public ResponseEntity<UserProfileResponseDTO> login(
+            @Valid @RequestBody LoginRequestDTO loginRequest,
+            HttpServletRequest request) {
+        return ResponseEntity.ok(authService.login(loginRequest, request));
+    }
+	
+	@GetMapping("/me")
+    public ResponseEntity<UserProfileResponseDTO> getCurrentUser(
+            @AuthenticationPrincipal CustomUserDetails currentUser) {
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(authService.getCurrentUserProfile(currentUser));
+    }
+	
+	@PostMapping("/ping")
+    public ResponseEntity> pingSession(
+            @AuthenticationPrincipal CustomUserDetails currentUser) {
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(Map.of("status", "ALIVE", "timestamp", System.currentTimeMillis()));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity> logout(
+            @AuthenticationPrincipal CustomUserDetails currentUser,
+            HttpServletRequest request,
+            HttpServletResponse response) {
+        authService.logout(currentUser, request, response);
+        return ResponseEntity.ok(Map.of("message", "Signed out successfully"));
+    }

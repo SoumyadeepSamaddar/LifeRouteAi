@@ -1,0 +1,5 @@
+package com.liferoute.backend.security;
+
+public class CustomUserDetailsService {
+
+}

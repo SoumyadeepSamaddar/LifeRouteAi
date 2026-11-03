@@ -1,0 +1,85 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  /* 7.2 Core Color Palette */
+  --color-primary: #0F766E;       /* Root Teal */
+  --color-primary-dark: #115E59;  /* Deep Teal */
+  --color-primary-light: #CCFBF1; /* Mint */
+  --color-secondary: #0B2545;     /* Deep Navy */
+  --color-accent: #E11D48;        /* Life Red (Emergency only) */
+  --color-success: #16A34A;       /* Green */
+  --color-warning: #F59E0B;       /* Amber */
+  --color-danger: #DC2626;        /* Red */
+  --color-info: #2563EB;          /* Blue */
+  --color-bg: #F5F8FA;            /* Cloud */
+  --color-surface: #FFFFFF;       /* White */
+  --color-border: #D9E2EC;        /* Mist */
+  --color-text: #1F2937;          /* Ink */
+  --color-text-muted: #64748B;    /* Slate */
+  --color-disabled: #CBD5E1;      /* Fog */
+  --color-focus-ring: #99F6E4;    /* 3px Focus Ring */
+
+  /* 7.2 Status Badge Tokens */
+  --badge-active-bg: #DCFCE7;
+  --badge-active-text: #166534;
+  --badge-hold-bg: #FEF3C7;
+  --badge-hold-text: #92400E;
+  --badge-matched-bg: #CCFBF1;
+  --badge-matched-text: #115E59;
+  --badge-transit-bg: #DBEAFE;
+  --badge-transit-text: #1E40AF;
+  --badge-completed-bg: #166534;
+  --badge-completed-text: #FFFFFF;
+  --badge-rejected-bg: #FEE2E2;
+  --badge-rejected-text: #991B1B;
+  --badge-inactive-bg: #E2E8F0;
+  --badge-inactive-text: #475569;
+
+  /* 7.2 AI Star Rating Tokens */
+  --star-5-bg: #FEE2E2;
+  --star-5-text: #DC2626;
+  --star-4-bg: #FFEDD5;
+  --star-4-text: #EA580C;
+  --star-3-bg: #FEF9C3;
+  --star-3-text: #CA8A04;
+
+  /* 7.3 Typography */
+  --font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+
+  /* 7.4 Spacing Scale (4, 8, 12, 16, 24, 32, 48 px) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+
+  /* 7.4 Radius & Shadows */
+  --radius-control: 8px;
+  --radius-card: 12px;
+  --radius-modal: 16px;
+  --radius-pill: 999px;
+  --shadow-card: 0 1px 3px rgba(11, 37, 69, 0.08);
+  --shadow-modal: 0 10px 30px rgba(11, 37, 69, 0.18);
+  --max-content-width: 1280px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1 { font-size: 28px; line-height: 36px; font-weight: 700; color: var(--color-secondary); }
+h2 { font-size: 22px; line-height: 30px; font-weight: 600; color: var(--color-secondary); }
+h3 { font-size: 18px; line-height: 26px; font-weight: 600; color: var(--color-secondary); }

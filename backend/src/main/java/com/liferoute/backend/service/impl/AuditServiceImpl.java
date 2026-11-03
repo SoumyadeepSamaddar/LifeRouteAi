@@ -1,0 +1,47 @@
+package com.liferoute.backend.service.impl;
+
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Propagation;
+import com.liferoute.backend.entity.AuditLog;
+import com.liferoute.backend.repository.AuditLogRepository;
+import com.liferoute.backend.security.CustomUserDetails;
+import com.liferoute.backend.service.AuditService;
+import com.liferoute.domain.enums.AuditActionType;
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class AuditServiceImpl implements AuditService {
+	private final AuditLogRepository auditLogRepository;
+	
+	@Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void log(CustomUserDetails user, AuditActionType actionType, String targetObject, String details, String ipAddress) {
+		AuditLog log = AuditLog.builder()
+				.userId(user != null ? user.getId() : null)
+                .userEmail(user != null ? user.getEmail() : "ANONYMOUS")
+                .userRole(user != null ? user.getRole().name() : "NONE")
+                .hospitalId(user != null ? user.getHospitalId() : null)
+                .actionType(actionType)
+                .targetObject(targetObject)
+                .details(details)
+                .ipAddress(ipAddress)
+                .build();
+        auditLogRepository.save(log);
+	}
+	
+	@Override
+    @Transactional(readOnly = true)
+    public List<AuditLog> getLatestAuditLogs() {
+        return auditLogRepository.findTop100ByOrderByCreatedAtDesc();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AuditLog> getHospitalAuditLogs(Long hospitalId) {
+        return auditLogRepository.findByHospitalIdOrderByCreatedAtDesc(hospitalId);
+    }
+}

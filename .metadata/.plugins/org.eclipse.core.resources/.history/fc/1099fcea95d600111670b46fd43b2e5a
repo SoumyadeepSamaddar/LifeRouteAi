@@ -1,0 +1,5 @@
+package com.liferoute.domain.enums;
+
+public enum CivicActivityType {
+
+}

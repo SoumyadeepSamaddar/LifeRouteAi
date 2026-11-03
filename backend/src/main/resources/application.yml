@@ -45,6 +45,6 @@ spring:
 
 app:
   cors:
-    allowed-origin: http://localhost:5173
+    allowed-origin: http://localhost:3000
   maps:
     api-key: ${GOOGLE_MAPS_API_KEY:YOUR_SERVER_SIDE_GOOGLE_MAPS_KEY}
