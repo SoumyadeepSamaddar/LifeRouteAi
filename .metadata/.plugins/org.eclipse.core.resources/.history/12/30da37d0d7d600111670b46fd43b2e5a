@@ -1,5 +1,0 @@
-package com.liferoute.backend.service.impl;
-
-public class AuditServiceImpl {
-
-}
