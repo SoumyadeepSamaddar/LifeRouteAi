@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -20,14 +21,15 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.List;
+import java.util.Arrays;
+import java.util.stream.Stream;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    @Value("${app.cors.allowed-origin:http://localhost:3000}")
+    @Value("${app.cors.allowed-origin:http://localhost:5173}")
     private String allowedOrigin;
 
     @Bean
@@ -40,8 +42,6 @@ public class SecurityConfig {
             .csrf(csrf -> csrf
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                 .csrfTokenRequestHandler(requestHandler)
-                
-                // Exempt public auth, activation, and ping endpoints from CSRF
                 .ignoringRequestMatchers(
                     "/api/health",
                     "/api/**"
@@ -53,6 +53,9 @@ public class SecurityConfig {
                 .maximumSessions(2)
             )
             .authorizeHttpRequests(auth -> auth
+                // Allow browser preflight OPTIONS checks
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
                 // 1. Public Endpoints (No login required)
                 .requestMatchers(
                     "/api/health",
@@ -114,10 +117,28 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(allowedOrigin));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-XSRF-TOKEN"));
+        
+        // Strictly allow configured frontend origins without duplicates
+        configuration.setAllowedOrigins(
+            Stream.of("http://localhost:5173", "http://127.0.0.1:5173", allowedOrigin)
+                  .distinct()
+                  .toList()
+        );
+        
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList(
+            "Authorization",
+            "Content-Type",
+            "X-Requested-With",
+            "Accept",
+            "Origin",
+            "Access-Control-Request-Method",
+            "Access-Control-Request-Headers",
+            "X-XSRF-TOKEN"
+        ));
         configuration.setAllowCredentials(true);
+        configuration.setMaxAge(3600L);
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;

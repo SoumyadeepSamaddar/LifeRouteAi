@@ -1,0 +1,12 @@
+package com.liferoute.backend.service;
+
+import com.liferoute.backend.dto.request.AwardCivicPointsRequestDTO;
+import com.liferoute.backend.dto.response.CivicPointResponseDTO;
+import com.liferoute.backend.dto.response.CivicSummaryResponseDTO;
+
+public interface CivicPointService {
+
+	CivicPointResponseDTO awardPoints(AwardCivicPointsRequestDTO request, Long actorUserId, String ipAddress);
+    CivicSummaryResponseDTO getUserCivicSummary(Long userId);
+}
+

@@ -1,0 +1,5 @@
+package com.liferoute.backend.service;
+
+public interface CivicPointService {
+
+}

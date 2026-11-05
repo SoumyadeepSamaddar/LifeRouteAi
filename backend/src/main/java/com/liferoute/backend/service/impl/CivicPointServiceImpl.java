@@ -1,0 +1,127 @@
+package com.liferoute.backend.service.impl;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.liferoute.backend.dto.request.AwardCivicPointsRequestDTO;
+import com.liferoute.backend.dto.response.CivicPointResponseDTO;
+import com.liferoute.backend.dto.response.CivicSummaryResponseDTO;
+import com.liferoute.backend.entity.AuditLog;
+import com.liferoute.backend.entity.CivicPoint;
+import com.liferoute.backend.entity.User;
+import com.liferoute.backend.repository.AuditLogRepository;
+import com.liferoute.backend.repository.CivicPointRepository;
+import com.liferoute.backend.repository.UserRepository;
+import com.liferoute.backend.service.CivicPointService;
+import com.liferoute.domain.enums.AuditActionType;
+import com.liferoute.domain.enums.CivicActivityType;
+
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class CivicPointServiceImpl implements CivicPointService {
+	
+	private final CivicPointRepository civicPointRepository;
+    private final UserRepository userRepository;
+    private final AuditLogRepository auditLogRepository;
+    
+    @Override
+    @Transactional
+    public CivicPointResponseDTO awardPoints(AwardCivicPointsRequestDTO request, Long actorUserId, String ipAddress) {
+        User targetUser = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new IllegalArgumentException("Target user not found with ID: " + request.getUserId()));
+        
+        int pointsToAward = (request.getCustomPoints() != null)
+                ? request.getCustomPoints()
+                : getDefaultPointsForActivity(request.getActivityType());
+
+        CivicPoint civicPoint = CivicPoint.builder()
+                .userId(targetUser.getId())
+                .activityType(request.getActivityType())
+                .points(pointsToAward)
+                .remarks(request.getRemarks() != null ? request.getRemarks().trim() : "Awarded for " + request.getActivityType().name())
+                .awardedAt(Instant.now())
+                .build();
+
+        CivicPoint saved = civicPointRepository.save(civicPoint);
+        
+        User actor = userRepository.findById(actorUserId).orElse(null);
+        AuditLog log = AuditLog.builder()
+                .userId(actorUserId)
+                .userEmail(actor != null ? actor.getEmail() : "system")
+                .userRole(actor != null ? actor.getRole().name() : "ADMIN")
+                .hospitalId(actor != null ? actor.getHospitalId() : null)
+                .actionType(AuditActionType.CREATE)
+                .targetObject("CivicPoint:User:" + targetUser.getId())
+                .details("Awarded " + pointsToAward + " pts (" + request.getActivityType() + ") to " + targetUser.getEmail())
+                .ipAddress(ipAddress)
+                .createdAt(Instant.now())
+                .build();
+        auditLogRepository.save(log);
+
+        return mapToDTO(saved);
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public CivicSummaryResponseDTO getUserCivicSummary(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userId));
+
+        int totalPoints = civicPointRepository.getTotalPointsByUserId(userId);
+        List<CivicPointResponseDTO> history = civicPointRepository.findByUserIdOrderByAwardedAtDesc(userId)
+                .stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+
+        return CivicSummaryResponseDTO.builder()
+                .userId(user.getId())
+                .userName(user.getName())
+                .userEmail(user.getEmail())
+                .totalPoints(totalPoints)
+                .civicTier(resolveCivicTier(totalPoints))
+                .priorityBonusMultiplier(resolvePriorityBonus(totalPoints))
+                .history(history)
+                .build();
+    }
+    
+    private int getDefaultPointsForActivity(CivicActivityType type) {
+        return switch (type) {
+            case REGISTRATION -> 50;
+            case CAMP_ATTENDANCE -> 100;
+            case REFERRAL -> 150;
+            case DONATION_PLEDGE -> 500;
+        };
+    }
+
+    private String resolveCivicTier(int totalPoints) {
+        if (totalPoints >= 600) return "PLATINUM_GUARDIAN";
+        if (totalPoints >= 300) return "GOLD_ADVOCATE";
+        if (totalPoints >= 100) return "SILVER_SUPPORTER";
+        return "BRONZE_MEMBER";
+    }
+
+    private double resolvePriorityBonus(int totalPoints) {
+        if (totalPoints >= 600) return 0.05; // +5% tie-breaker bonus
+        if (totalPoints >= 300) return 0.03; // +3% tie-breaker bonus
+        if (totalPoints >= 100) return 0.01; // +1% tie-breaker bonus
+        return 0.00;
+    }
+
+    private CivicPointResponseDTO mapToDTO(CivicPoint cp) {
+        return CivicPointResponseDTO.builder()
+                .id(cp.getId())
+                .userId(cp.getUserId())
+                .activityType(cp.getActivityType())
+                .points(cp.getPoints())
+                .remarks(cp.getRemarks())
+                .awardedAt(cp.getAwardedAt())
+                .build();
+    }
+        
+}

@@ -11,7 +11,9 @@ public class UserProfileResponseDTO {
 	private Long id;
     private String name;
     private String email;
+    private String phone; 
     private Role role;
     private StaffRole staffRole;
     private Long hospitalId;
+    private boolean mustChangePassword;
 }

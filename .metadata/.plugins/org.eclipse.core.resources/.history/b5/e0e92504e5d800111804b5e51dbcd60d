@@ -1,0 +1,5 @@
+package com.liferoute.backend.dto.response;
+
+public class CivicPointResponseDTO {
+
+}
