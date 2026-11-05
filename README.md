@@ -1,126 +1,45 @@
-LifeRouteAI is a production-grade Biomedical AI platform engineered for intelligent organ allocation, emergency transit routing, and cross-hospital transplantation logistics. The backend is built on Spring Boot 3.3.4 and Java 17, strictly adhering to enterprise vertical layered architecture (Entity ->Repository -> DTO -> Service-> ServiceImpl -> Controller).
+# Life Root AI — Platform & Governance Foundation (Developer 1 Scope)
 
-Technical Stack
-Language & Runtime: Java 17
+Life Root AI is an enterprise-grade biomedical platform engineered for intelligent organ allocation, emergency transit routing, and cross-hospital transplantation logistics. This repository contains the complete implementation of Developer 1's vertical slice, covering platform security, database architecture, administrative governance, and the shared React frontend design system.
 
-Framework: Spring Boot 3.3.4 (Spring Web, Spring Data JPA, Spring Security, Spring Validation, Spring Transaction)
+---
 
-Database & Persistence: MySQL 8, Hibernate 6, Flyway Migrations
+## 1. Technical Stack & Architecture
 
-Security & Auth: Spring Security (Stateful HTTP session management via JSESSIONID, BCrypt password hashing, RBAC, CSRF token handling, brute-force lockouts)
+* **Backend:** Java 17+, Spring Boot 3.3.4 (Spring Web, Spring Data JPA, Spring Security, Validation, Transaction)
+* **Frontend:** React 18 + Vite, React Router v6, Axios with credentials, Custom Design System (`tokens.css`)
+* **Database & Persistence:** MySQL 8, Hibernate 6, Flyway Migrations, Spring Session JDBC
+* **Security & Auth:** Stateful HTTP session management via `JSESSIONID` cookie, BCrypt password hashing, Role-Based Access Control (RBAC), and CSRF protection (No JWT).
 
-Tooling & Build: Apache Maven, Project Lombok, Spring Tool Suite (STS 4)
+---
 
+## 2. Database Schema (Flyway Base Migration)
 
-Architectural Implementation Status
-1. Database Schema & Flyway Migration (V1__init_platform_schema.sql)
-Automated schema migration baseline managing 6 relational tables:
+The platform baseline (`V1__init_platform_schema.sql`) establishes 6 core tables:
+1. **`hospitals`** — Transplant center profiles, location coordinates, trauma status, and organ licenses.
+2. **`users`** — Unified user management with granular roles (`ADMIN`, `HOSPITAL`, `PATIENT`, `DONOR`) and hospital staff sub-roles (`COORDINATOR`, `DOCTOR`, `DISPATCH`, `HOSPITAL_ADMIN`).
+3. **`security_codes`** — Cryptographically hashed, single-use activation keys for hospital onboarding.
+4. **`system_settings`** — Dynamic key-value store for algorithm weights (a1–a4), organ shelf life, and traffic penalties.
+5. **`audit_logs`** — Immutable compliance log tracking every authentication, creation, update, and administrative action.
+6. **`civic_points`** — Algorithm 4 scoring engine tracking donor pledges and camp attendance.
 
-hospitals: Geo-coordinates, trauma center flags, helipad access, organ licenses, and verification status.
+---
 
-users: Identity management across roles (ADMIN, HOSPITAL, PATIENT, DONOR), lockouts, and timestamps.
+## 3. Core Features Implemented (Developer 1)
 
-security_codes: One-way hashed hospital activation credentials with expiration dates.
+* **Cryptographic Hospital Onboarding:** Admins generate secure one-time activation codes (e.g., `LR-XXXX-XXXX`) valid for configurable hours. Hospitals activate their institutional accounts using these codes.
+* **Role-Based Security & Session Governance:** Stateful session handling with a 30-minute idle timeout, `/auth/ping` heartbeat, brute-force lockout protection (5 failed attempts), and an immutable audit trail.
+* **Global Design System:** Strict adherence to project design tokens (`tokens.css`), featuring Root Teal (`#0F766E`), Life Red (`#E11D48`), Inter typography, and modular UI components (`Button`, `Card`, `StatCard`, `Badge`, `Input`, `Select`, `Modal`).
+* **Admin Command Center & Portals:** Comprehensive views for hospital management, security code auditing, algorithm weight configurations, staff provisioning, and civic score tracking.
 
-system_settings: Real-time weights for allocation algorithms, shelf-life thresholds, and transit penalties.
+---
 
-audit_logs: Immutable audit trail tracking security and domain events.
+## 4. Getting Started Locally
 
-civic_points: Civic contribution and incentive tracking for organ donation awareness.
-
-2. Vertical Slice #1 — Authentication, Session Lifecycle & Auditing
-
-Session-Based Authentication: Clean cookie-driven authentication issuing JSESSIONID with HTTP-only security and configurable expiration.
-
-Brute-Force Protection: Account locking mechanism triggered after consecutive failed authentication attempts.
-
-Session Monitoring: Dedicated /api/auth/ping endpoint to refresh active sessions and track heartbeat status.
-
-Immutable Auditing: Event-driven audit service writing operational traces (IP address, user context, action type, target resource).
-
-3. Vertical Slice #2 — Hospital Provisioning & One-Time Code Activation
-Hospital Onboarding: Admin-managed provisioning of hospitals with automated verification status workflows.
-
-Cryptographic Security Codes: Admin generation of one-time onboarding codes formatted as LR-XXXX-XXXX. Only salted BCrypt hashes and masked representations (LR-****-XXXX) are persisted.
-
-Public Activation Workflow: Two-step validation flow enabling hospital administrators to claim institutional profiles and establish root credentials.
-
-4. Application Configuration & Seeding
-Security Configuration: Modular Spring Security filter chain enforcing Role-Based Access Control (ROLE_ADMIN, ROLE_HOSPITAL, ROLE_PATIENT, ROLE_DONOR), custom exception handlers (clean 401/403 JSON payloads), and CORS policies.
-
-Automatic Admin Seeding: CommandLineRunner initializing system admin credentials (admin@liferoute.ai / Admin1234) on first boot if no admin account exists.
-
-Global Exception Handling: @RestControllerAdvice converting constraint violations and domain errors into structured HTTP 400 responses.
-
-
-
-
-Repository Directory Structure
-backend/
-├── pom.xml
-└── src/
-    └── main/
-        ├── java/
-        │   └── com/
-        │       └── liferoute/
-        │           ├── backend/
-        │           │   ├── BackendApplication.java
-        │           │   ├── config/
-        │           │   │   ├── DataInitializer.java
-        │           │   │   ├── GlobalExceptionHandler.java
-        │           │   │   └── SecurityConfig.java
-        │           │   ├── controller/
-        │           │   │   ├── AdminHospitalController.java
-        │           │   │   ├── AuthController.java
-        │           │   │   ├── HealthController.java
-        │           │   │   └── HospitalActivationController.java
-        │           │   ├── dto/
-        │           │   │   ├── request/
-        │           │   │   │   ├── ActivateHospitalRequestDTO.java
-        │           │   │   │   ├── LoginRequestDTO.java
-        │           │   │   │   └── VerifyCodeRequestDTO.java
-        │           │   │   └── response/
-        │           │   │       ├── ApiMessageResponseDTO.java
-        │           │   │       ├── SecurityCodeResponseDTO.java
-        │           │   │       ├── UserProfileResponseDTO.java
-        │           │   │       └── VerifyCodeResponseDTO.java
-        │           │   ├── entity/
-        │           │   │   ├── AuditLog.java
-        │           │   │   ├── Hospital.java
-        │           │   │   ├── SecurityCode.java
-        │           │   │   └── User.java
-        │           │   ├── repository/
-        │           │   │   ├── AuditLogRepository.java
-        │           │   │   ├── HospitalRepository.java
-        │           │   │   ├── SecurityCodeRepository.java
-        │           │   │   └── UserRepository.java
-        │           │   ├── security/
-        │           │   │   ├── CustomUserDetails.java
-        │           │   │   └── CustomUserDetailsService.java
-        │           │   └── service/
-        │           │       ├── AuditService.java
-        │           │       ├── AuthService.java
-        │           │       ├── HospitalService.java
-        │           │       ├── SecurityCodeService.java
-        │           │       └── impl/
-        │           │           ├── AuditServiceImpl.java
-        │           │           ├── AuthServiceImpl.java
-        │           │           ├── HospitalServiceImpl.java
-        │           │           └── SecurityCodeServiceImpl.java
-        │           └── domain/
-        │               └── enums/
-        │                   ├── AuditActionType.java
-        │                   ├── CivicActivityType.java
-        │                   ├── HospitalStatus.java
-        │                   ├── HospitalType.java
-        │                   ├── Role.java
-        │                   ├── SecurityCodeStatus.java
-        │                   └── StaffRole.java
-        └── resources/
-            ├── application.yml
-            └── db/
-                └── migration/
-                    └── V1__init_platform_schema.sql
-
-
-
+### Backend Setup
+1. Create a local MySQL database named `liferoot_db`.
+2. Configure your credentials in `backend/src/main/resources/application.yml`.
+3. Run the backend using the Maven wrapper:
+   ```bash
+   cd backend
+   mvnw.cmd spring-boot:run
