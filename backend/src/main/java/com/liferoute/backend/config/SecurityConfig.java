@@ -76,6 +76,8 @@ public class SecurityConfig {
                     "/api/auth/logout"
                 ).authenticated()
 
+                .requestMatchers("/api/transport/**").authenticated()
+
                 // 3. Role-Protected Endpoints
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/hospital/**").hasAnyRole("ADMIN", "HOSPITAL")

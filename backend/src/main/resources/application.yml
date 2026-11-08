@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: ${SERVER_PORT:8081}
   servlet:
     session:
       timeout: 30m
@@ -13,21 +13,21 @@ spring:
   application:
     name: life-root-ai
   datasource:
-    url: jdbc:mysql://localhost:3306/liferoot_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Kolkata
-    username: root
-    password: Kolkatann@2025
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${DB_URL:jdbc:h2:mem:liferoot;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
+    username: ${DB_USERNAME:sa}
+    password: ${DB_PASSWORD:}
+    driver-class-name: ${DB_DRIVER_CLASS_NAME:org.h2.Driver}
   jpa:
     hibernate:
-      ddl-auto: validate # Schema changes strictly through Flyway migrations
+      ddl-auto: ${DDL_AUTO:update}
     open-in-view: false
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
+        dialect: ${HIBERNATE_DIALECT:org.hibernate.dialect.H2Dialect}
         jdbc:
           time_zone: Asia/Kolkata
   flyway:
-    enabled: true
+    enabled: ${FLYWAY_ENABLED:false}
     baseline-on-migrate: true
     locations: classpath:db/migration
   session:
@@ -48,3 +48,6 @@ app:
     allowed-origin: http://localhost:5173
   maps:
     api-key: ${GOOGLE_MAPS_API_KEY:YOUR_SERVER_SIDE_GOOGLE_MAPS_KEY}
+    provider: ${APP_MAPS_PROVIDER:mock}
+  notifications:
+    provider: ${APP_NOTIFICATIONS_PROVIDER:log}

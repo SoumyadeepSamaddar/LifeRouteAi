@@ -17,6 +17,8 @@ import AuditLogPage from './pages/admin/AuditLogPage';
 import CivicPointsPage from './pages/admin/CivicPointsPage';
 import HospitalStaffPage from './pages/hospital/HospitalStaffPage';
 import UserPortalPage from './pages/portal/UserPortalPage';
+import TransportPage from './pages/transport/TransportPage';
+import MatchDetailPage from './pages/transport/MatchDetailPage';
 
 import './styles/tokens.css';
 
@@ -46,6 +48,10 @@ export default function App() {
 
           {/* Patient / Donor Portal */}
           <Route path="/me" element={<ProtectedRoute allowedRoles={['PATIENT', 'DONOR', 'ADMIN']}><AppLayout><UserPortalPage /></AppLayout></ProtectedRoute>} />
+
+          {/* Logistics / Transport */}
+          <Route path="/transport" element={<ProtectedRoute allowedRoles={['ADMIN', 'HOSPITAL']}><AppLayout><TransportPage /></AppLayout></ProtectedRoute>} />
+          <Route path="/matches/:matchId" element={<ProtectedRoute allowedRoles={['ADMIN', 'HOSPITAL']}><AppLayout><MatchDetailPage /></AppLayout></ProtectedRoute>} />
 
           {/* Catch-all 404 */}
           <Route path="*" element={<ErrorPage />} />

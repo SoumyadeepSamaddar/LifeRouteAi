@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   HeartPulse, LayoutDashboard, Building2, KeyRound, Settings,
-  ShieldAlert, Users, Award, LogOut, RefreshCw
+  ShieldAlert, Users, Award, LogOut, RefreshCw, Route
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../ui/Button';
@@ -30,11 +30,15 @@ export const AppLayout = ({ children }) => {
     { to: '/admin/civic-points', label: 'Civic Points (Alg 4)', icon: Award },
     { to: '/admin/settings', label: 'Algorithm Settings', icon: Settings },
     { to: '/admin/audit', label: 'Audit Log', icon: ShieldAlert },
+    { to: '/transport', label: 'Transport', icon: Route },
+    { to: '/matches/LR-MATCH-2048', label: 'Match Detail', icon: HeartPulse },
   ];
 
   const hospitalLinks = [
     { to: '/hospital', label: 'Hospital Dashboard', icon: LayoutDashboard },
     { to: '/hospital/staff', label: 'Manage Staff', icon: Users },
+    { to: '/transport', label: 'Transport', icon: Route },
+    { to: '/matches/LR-MATCH-2048', label: 'Match Detail', icon: HeartPulse },
   ];
 
   const portalLinks = [
@@ -46,9 +50,10 @@ export const AppLayout = ({ children }) => {
     user?.role === 'HOSPITAL' ? hospitalLinks : portalLinks;
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
+    <div className="app-shell" style={{ display: 'flex', minHeight: '100vh', width: '100%' }}>
       {/* 260px Deep Navy Left Sidebar (Section 7.7) */}
       <aside
+        className="app-sidebar"
         style={{
           width: '260px',
           background: 'var(--color-secondary)',
@@ -58,12 +63,12 @@ export const AppLayout = ({ children }) => {
           flexShrink: 0,
         }}
       >
-        <div style={{ height: '64px', display: 'flex', alignItems: 'center', gap: '10px', padding: '0 20px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+        <div className="app-brand" style={{ height: '64px', display: 'flex', alignItems: 'center', gap: '10px', padding: '0 20px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
           <HeartPulse size={26} color="var(--color-accent)" />
           <span style={{ fontSize: '18px', fontWeight: 700, letterSpacing: '-0.3px' }}>Life Root AI</span>
         </div>
 
-        <nav style={{ padding: '16px 12px', flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <nav className="app-nav" style={{ padding: '16px 12px', flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
           {navItems.map((item) => {
             const Icon = item.icon;
             const active = location.pathname === item.to;
@@ -99,25 +104,28 @@ export const AppLayout = ({ children }) => {
       </aside>
 
       {/* Main Content Area */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <div className="app-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         {/* 64px Top Bar */}
         <header
+          className="app-topbar"
           style={{
-            height: '64px',
+            minHeight: '64px',
             background: 'var(--color-surface)',
             borderBottom: '1px solid var(--color-border)',
             padding: '0 24px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '12px',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
             <span className="text-small" style={{ color: 'var(--color-text-muted)' }}>
               Biomedical Organ Allocation & Green Corridor Platform
             </span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div className="app-toolbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
             {pingStatus && <span className="text-caption" style={{ color: 'var(--color-success)' }}>{pingStatus}</span>}
             <Button variant="ghost" size="small" icon={RefreshCw} onClick={handlePing}>
               Stay signed in
@@ -128,7 +136,7 @@ export const AppLayout = ({ children }) => {
           </div>
         </header>
 
-        <main style={{ padding: '24px', maxWidth: '1280px', width: '100%', margin: '0 auto', flex: 1 }}>
+        <main className="app-main" style={{ padding: '24px', maxWidth: '1280px', width: '100%', margin: '0 auto', flex: 1 }}>
           {children}
         </main>
       </div>
